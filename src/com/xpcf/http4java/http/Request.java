@@ -1,6 +1,8 @@
 package com.xpcf.http4java.http;
 
 import cn.hutool.core.util.StrUtil;
+import com.xpcf.http4java.Bootstrap;
+import com.xpcf.http4java.catalina.Context;
 import com.xpcf.http4java.util.MiniBrowser;
 
 import java.io.IOException;
@@ -15,8 +17,14 @@ import java.net.Socket;
 public class Request {
 
     private String requestString;
+
     private String uri;
+
     private Socket socket;
+
+    private Context context;
+
+
 
     public Request(Socket socket) throws IOException {
         this.socket = socket;
@@ -25,6 +33,24 @@ public class Request {
             return;
         }
         parseUri();
+        parseContext();
+
+        if (!"/".equals(context.getPath())) {
+            uri = StrUtil.removePrefix(uri, context.getPath());
+        }
+    }
+
+    private void parseContext() {
+        String path = StrUtil.subBetween(uri, "/", "/");
+        if (null == path) {
+            path = "/";
+        } else {
+            path = "/" + path;
+        }
+        context = Bootstrap.contextMap.get(path);
+        if (null == context) {
+            context = Bootstrap.contextMap.get("/");
+        }
     }
 
     private void parseHttpRequest() throws IOException {
@@ -44,12 +70,22 @@ public class Request {
         uri = temp;
     }
 
+
+
     public String getUri() {
         return uri;
     }
 
     public String getRequestString() {
         return requestString;
+    }
+
+    public Context getContext() {
+        return context;
+    }
+
+    public void setContext(Context context) {
+        this.context = context;
     }
 }
 

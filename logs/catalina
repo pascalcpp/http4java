@@ -1,0 +1,30 @@
+01 02, 2022 00:09:33 AM com.xpcf.http4java.Bootstrap logJVM
+INFO : Server version:		HTTP4JAVA/1.0.0
+01 02, 2022 00:09:34 AM com.xpcf.http4java.Bootstrap logJVM
+INFO : Server built:		2022-01-01
+01 02, 2022 00:09:34 AM com.xpcf.http4java.Bootstrap logJVM
+INFO : Server number:		1.0.1
+01 02, 2022 00:09:34 AM com.xpcf.http4java.Bootstrap logJVM
+INFO : OS Name	:		Windows 10
+01 02, 2022 00:09:34 AM com.xpcf.http4java.Bootstrap logJVM
+INFO : OS Version:		10.0
+01 02, 2022 00:09:34 AM com.xpcf.http4java.Bootstrap logJVM
+INFO : Architecture:		amd64
+01 02, 2022 00:09:34 AM com.xpcf.http4java.Bootstrap logJVM
+INFO : Java Home:		C:\Program Files\Java\jdk1.8.0_181\jre
+01 02, 2022 00:09:34 AM com.xpcf.http4java.Bootstrap logJVM
+INFO : JVM Version:		1.8.0_181-b13
+01 02, 2022 00:09:34 AM com.xpcf.http4java.Bootstrap logJVM
+INFO : JVM Vendor:		Oracle Corporation
+01 02, 2022 00:09:34 AM com.xpcf.http4java.catalina.Context <init>
+INFO : Deploying web application directory D:\project-2022\java\http4java\webapps\a
+01 02, 2022 00:09:34 AM com.xpcf.http4java.catalina.Context <init>
+INFO : Deployment of web application directory D:\project-2022\java\http4java\webapps\a has finished in 0 ms
+01 02, 2022 00:09:34 AM com.xpcf.http4java.catalina.Context <init>
+INFO : Deploying web application directory D:\project-2022\java\http4java\webapps\ROOT
+01 02, 2022 00:09:34 AM com.xpcf.http4java.catalina.Context <init>
+INFO : Deployment of web application directory D:\project-2022\java\http4java\webapps\ROOT has finished in 0 ms
+01 02, 2022 00:09:34 AM com.xpcf.http4java.catalina.Context <init>
+INFO : Deploying web application directory D:/project-2022/java/http4java/b
+01 02, 2022 00:09:34 AM com.xpcf.http4java.catalina.Context <init>
+INFO : Deployment of web application directory D:/project-2022/java/http4java/b has finished in 0 ms

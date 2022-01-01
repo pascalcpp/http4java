@@ -24,5 +24,8 @@ public class Constant {
 
     public static final File rootFolder = new File(webappsFolder, "ROOT");
 
+    public static final File confFolder = new File(SystemUtil.get("user.dir"), "conf");
+
+    public static final File serverXmlFile = new File(confFolder, "server.xml");
 
 }
