@@ -39,15 +39,14 @@ public class TestServer {
     }
 
     @Test
-    public void testServer() {
-        String html = getContentString("/");
-        Assert.assertEquals(html, "hello world");
+    public void testaIndex() {
+        String html = getContentString("/a");
+        Assert.assertEquals(html,"a.index");
     }
-
     @Test
-    public void testHtml() {
-        String html = getContentString("/a.html");
-        Assert.assertEquals(html, "Hello server from a.html");
+    public void testbIndex() {
+        String html = getContentString("/b/");
+        Assert.assertEquals(html,"hello from index.html@b");
     }
 
     @Test
@@ -68,29 +67,36 @@ public class TestServer {
         threadPool.awaitTermination(1, TimeUnit.HOURS);
 
         long duration = timeInterval.intervalMs();
-        System.out.println(duration);
         Assert.assertTrue(duration < 3000);
 
     }
 
     @Test
-    public void testaIndex() {
-        String html = getContentString("/a/index.html");
-        System.out.println(html);
-        Assert.assertEquals(html,"a.index");
+    public void test404() {
+        String response = getHttpString("/notfoudn");
+        System.out.println(response);
+        containAssert(response, "HTTP/1.1 404 Not Found");
+    }
+    @Test
+    public void test500() {
+        String response  = getHttpString("/500.html");
+        containAssert(response, "HTTP/1.1 500 Internal Server Error");
     }
 
-    @Test
-    public void testbIndex() {
-        String html = getContentString("/b/index.html");
-        System.out.println(html);
-        Assert.assertEquals(html,"hello from index.html@b");
-    }
 
     private String getContentString(String uri) {
         String url = StrUtil.format("http://{}:{}{}", ip, port, uri);
         String content = MiniBrowser.getContentString(url);
         return content;
     }
+    private String getHttpString(String uri) {
+        String url = StrUtil.format("http://{}:{}{}", ip,port,uri);
+        String http = MiniBrowser.getHttpString(url);
+        return http;
+    }
 
+    private void containAssert(String html, String string) {
+        boolean match = StrUtil.containsAny(html, string);
+        Assert.assertTrue(match);
+    }
 }

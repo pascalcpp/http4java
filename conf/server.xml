@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Server>
-    <Context path = "/b" docBase = "D:/project-2022/java/http4java/b"/>
+
+    <Service name = "catalina">
+        <Engine defaultHost = "localhost">
+            <Host name = "localhost">
+                <Context path = "/b" docBase = "D:/project-2022/java/http4java/b"/>
+            </Host>
+        </Engine>
+    </Service>
 
 </Server>
