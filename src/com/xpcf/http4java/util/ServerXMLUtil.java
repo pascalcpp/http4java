@@ -1,9 +1,8 @@
 package com.xpcf.http4java.util;
 
+import cn.hutool.core.convert.Convert;
 import cn.hutool.core.io.FileUtil;
-import com.xpcf.http4java.catalina.Context;
-import com.xpcf.http4java.catalina.Engine;
-import com.xpcf.http4java.catalina.Host;
+import com.xpcf.http4java.catalina.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -35,6 +34,19 @@ public class ServerXMLUtil {
         return result;
     }
 
+    public static List<Connector> getConnectors(Service service) {
+        List<Connector> result = new ArrayList<>();
+        String xml = FileUtil.readUtf8String(Constant.serverXmlFile);
+        Document d = Jsoup.parse(xml);
+        Elements es = d.select("Connector");
+        for (Element e : es) {
+            int port = Convert.toInt(e.attr("port"));
+            Connector c = new Connector(service);
+            c.setPort(port);
+            result.add(c);
+        }
+        return result;
+    }
 
     public static String getServiceName() {
         String xml = FileUtil.readUtf8String(Constant.serverXmlFile);

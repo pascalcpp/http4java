@@ -5,12 +5,14 @@ import cn.hutool.core.date.TimeInterval;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.NetUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpUtil;
 import com.xpcf.http4java.log.Logger;
 import com.xpcf.http4java.util.MiniBrowser;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.ByteArrayOutputStream;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -21,7 +23,7 @@ import java.util.concurrent.TimeUnit;
  * @date 12/27/2021 9:37 AM
  */
 public class TestServer {
-    private static int port = 4396;
+    private static int port = 18081;
     private static String ip = "127.0.0.1";
 
 
@@ -37,6 +39,22 @@ public class TestServer {
             Logger.println("start test");
         }
     }
+
+    @Test
+    public void testaTxt() {
+        String response  = getHttpString("/a.txt");
+        containAssert(response, "Content-Type: text/plain");
+    }
+    @Test
+    public void testPDF() {
+        String uri = "/etf.pdf";
+        String url = StrUtil.format("http://{}:{}{}", ip,port,uri);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        HttpUtil.download(url, baos, true);
+        int pdfFileLength = 3590775;
+        Assert.assertEquals(pdfFileLength, baos.toByteArray().length);
+    }
+
 
     @Test
     public void testaIndex() {

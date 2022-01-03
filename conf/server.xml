@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Server>
-
     <Service name = "catalina">
+        <Connector port = "18080"/>
+        <Connector port = "18081"/>
+        <Connector port = "18082"/>
         <Engine defaultHost = "localhost">
             <Host name = "localhost">
                 <Context path = "/b" docBase = "D:/project-2022/java/http4java/b"/>
             </Host>
         </Engine>
     </Service>
-
 </Server>

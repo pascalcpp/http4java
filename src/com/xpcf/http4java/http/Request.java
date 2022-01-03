@@ -77,7 +77,7 @@ public class Request {
 
     private void parseHttpRequest() throws IOException {
         InputStream inputStream = this.socket.getInputStream();
-        byte[] bytes = MiniBrowser.readBytes(inputStream);
+        byte[] bytes = MiniBrowser.readBytes(inputStream, false);
         requestString = new String(bytes, "utf-8");
 //        LogFactory.get().info(requestString);
     }

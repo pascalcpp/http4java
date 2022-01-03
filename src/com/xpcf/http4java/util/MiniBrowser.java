@@ -18,26 +18,8 @@ public class MiniBrowser {
 
 
     public static void main(String[] args) {
-        int port = 4396;
-        try {
-            ServerSocket serverSocket = new ServerSocket(port);
-            Socket accept = serverSocket.accept();
-            InputStream is = accept.getInputStream();
-            System.out.println("c1");
-            byte[] bytes = MiniBrowser.readBytes(is);
-            System.out.println("c132");
-            System.out.println(new String(bytes));
-            System.out.println("asdasd");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
 
-//        String url = "http://127.0.0.1:4396/";
-//        String contentString= getContentString(url,false);
-//        System.out.println(contentString);
-//        String httpString= getHttpString(url,false);
-//        System.out.println(httpString);
     }
 
 
@@ -139,7 +121,7 @@ public class MiniBrowser {
 
             // 接受response
             InputStream is = client.getInputStream();
-            result = readBytes(is);
+            result = readBytes(is, true);
             client.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -153,7 +135,7 @@ public class MiniBrowser {
         return result;
     }
 
-    public static byte[] readBytes(InputStream is) throws IOException {
+    public static byte[] readBytes(InputStream is, boolean fully) throws IOException {
         int bufferSize = 1024;
         byte[] buffer = new byte[bufferSize];
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -168,7 +150,7 @@ public class MiniBrowser {
 
                 baos.write(buffer, 0, length);
                 // 读到最后的数据 结束
-                if (length != bufferSize) {
+                if (!fully && length != bufferSize) {
                     break;
                 }
         }
