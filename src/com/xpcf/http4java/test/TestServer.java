@@ -68,6 +68,12 @@ public class TestServer {
     }
 
     @Test
+    public void testhello() {
+        String html = getContentString("/hello");
+        Assert.assertEquals(html,"hello");
+    }
+
+    @Test
     public void testTimeConsumeHtml() throws InterruptedException {
         ThreadPoolExecutor threadPool = new ThreadPoolExecutor(20, 20, 60, TimeUnit.SECONDS,
                 new LinkedBlockingQueue<Runnable>(10));
