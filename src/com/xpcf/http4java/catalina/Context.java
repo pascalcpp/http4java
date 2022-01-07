@@ -5,6 +5,7 @@ import cn.hutool.core.date.TimeInterval;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.log.LogFactory;
+import com.xpcf.http4java.classloader.WebappClassLoader;
 import com.xpcf.http4java.exception.WebConfigDuplicatedException;
 import com.xpcf.http4java.util.Constant;
 import com.xpcf.http4java.util.ContextXMLUtil;
@@ -31,6 +32,8 @@ public class Context {
 
     private File contextWebXmlFile;
 
+    private WebappClassLoader webappClassLoader;
+
     private Map<String, String> urlToServletClassName;
 
     private Map<String, String> urlToServletName;
@@ -39,16 +42,24 @@ public class Context {
 
     private Map<String, String> classNameToServletName;
 
+
     public Context(String path, String docBase) {
         this.path = path;
         this.docBase = docBase;
         this.contextWebXmlFile = new File(docBase, ContextXMLUtil.getWatchedResource());
+
+        ClassLoader commonClassLoader = Thread.currentThread().getContextClassLoader();
+        webappClassLoader = new WebappClassLoader(docBase, commonClassLoader);
+
         this.urlToServletName = new HashMap<>();
         this.urlToServletClassName = new HashMap<>();
         this.servletNameToClassName = new HashMap<>();
         this.classNameToServletName = new HashMap<>();
 
         deploy();
+    }
+    public WebappClassLoader getWebappClassLoader() {
+        return webappClassLoader;
     }
 
 

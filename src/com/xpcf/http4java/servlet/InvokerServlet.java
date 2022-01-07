@@ -1,7 +1,9 @@
 package com.xpcf.http4java.servlet;
 
 import cn.hutool.core.util.ReflectUtil;
+import cn.hutool.log.LogFactory;
 import com.xpcf.http4java.catalina.Context;
+import com.xpcf.http4java.classloader.WebappClassLoader;
 import com.xpcf.http4java.http.Request;
 import com.xpcf.http4java.http.Response;
 import com.xpcf.http4java.util.Constant;
@@ -38,9 +40,19 @@ public class InvokerServlet extends HttpServlet {
         String uri = request.getUri();
         Context context = request.getContext();
         String servletClassName = context.getServletClassName(uri);
-        Object servletObject = ReflectUtil.newInstance(servletClassName);
 
-        ReflectUtil.invoke(servletObject, "service", request, response);
-        response.setStatus(Constant.CODE200);
+        try {
+            Class<?> servletClazz = context.getWebappClassLoader().loadClass(servletClassName);
+
+            LogFactory.get().info("servletClass: " + servletClazz);
+            LogFactory.get().info("servletClass ClassLoader: " + servletClazz.getClassLoader());
+
+            Object servletObject = ReflectUtil.newInstance(servletClazz);
+            ReflectUtil.invoke(servletObject, "service", request, response);
+            response.setStatus(Constant.CODE200);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
     }
 }

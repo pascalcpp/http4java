@@ -66,8 +66,12 @@ public class TestServer {
         String html = getContentString("/b/");
         Assert.assertEquals(html,"hello from index.html@b");
     }
-    
 
+    @Test
+    public void testJavawebHello() {
+        String html = getContentString("/javaweb/hello");
+        Assert.assertEquals(html,"hello@javaweb");
+    }
 
     @Test
     public void testhello2() {
