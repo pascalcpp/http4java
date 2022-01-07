@@ -1,6 +1,7 @@
 package com.xpcf.http4java.util;
 
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.io.IORuntimeException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -15,10 +16,15 @@ import java.io.File;
 public class ContextXMLUtil {
 
     public static String getWatchedResource() {
-        String xml = FileUtil.readUtf8String(Constant.contextXmlFile);
-        Document d = Jsoup.parse(xml);
-        Element e = d.select("WatchedResource").first();
-        return e.text();
+        try {
+            String xml = FileUtil.readUtf8String(Constant.contextXmlFile);
+            Document d = Jsoup.parse(xml);
+            Element e = d.select("WatchedResource").first();
+            return e.text();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return "WEB-INF/web.xml";
+        }
     }
 
 }

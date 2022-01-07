@@ -11,6 +11,13 @@ import java.io.File;
  */
 public class Constant {
 
+    public static final int CODE200 = 200;
+
+    public static final int CODE302 = 302;
+
+    public static final int CODE404 = 404;
+
+    public static final int CODE500 = 500;
 
     public static final String responseHead202 = "HTTP/1.1 200 OK\r\n"
             + "Content-Type: {}\r\n\r\n";

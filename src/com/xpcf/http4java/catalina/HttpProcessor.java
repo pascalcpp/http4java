@@ -3,10 +3,13 @@ package com.xpcf.http4java.catalina;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.ArrayUtil;
+import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.log.LogFactory;
 import com.xpcf.http4java.http.Request;
 import com.xpcf.http4java.http.Response;
+import com.xpcf.http4java.servlet.DefaultServlet;
+import com.xpcf.http4java.servlet.InvokerServlet;
 import com.xpcf.http4java.util.Constant;
 import com.xpcf.http4java.util.WebXMLUtil;
 import com.xpcf.http4java.webappservlet.HelloServlet;
@@ -34,47 +37,26 @@ public class HttpProcessor {
                 return;
             }
 
-            LogFactory.get().info("uri: " + uri);
             Context context = request.getContext();
+            String servletClassName = context.getServletClassName(uri);
+            LogFactory.get().info("uri: " + uri);
 
-
-            if ("/500.html".equals(uri)) {
-                throw new RuntimeException("this is a deliberately created exception");
-            }
-
-            if ("/hello".equals(uri)) {
-                HelloServlet helloServlet = new HelloServlet();
-                helloServlet.doGet(request, response);
+            if (null != servletClassName) {
+                InvokerServlet.getInstance().service(request, response);
             } else {
-                if ("/".equals(uri)) {
-                    uri = WebXMLUtil.getWelComeFile(request.getContext());
-                }
-                // 去掉第一个/
-                String fileName = StrUtil.removePrefix(uri, "/");
-                File file = FileUtil.file(context.getDocBase(), fileName);
-                if (file.exists()) {
-
-                    String extName = FileUtil.extName(fileName);
-                    String mimeType = WebXMLUtil.getMimeType(extName);
-                    response.setContentType(mimeType);
-
-//                                String fileContent = FileUtil.readUtf8String(file);
-//                                response.getWriter().println(fileContent);
-
-                    byte[] body = FileUtil.readBytes(file);
-                    response.setBody(body);
-
-                    if ("timeConsume.html".equals(fileName)) {
-                        ThreadUtil.sleep(1000);
-                    }
-                } else {
-                    handle404(s, uri);
-                    return;
-                }
+                DefaultServlet.getInstance().service(request, response);
             }
 
-            // 输出response
-            handle200(s, response);
+            if (Constant.CODE200 == response.getStatus()) {
+                handle200(s, response);
+                return;
+            }
+
+            if (Constant.CODE404 == response.getStatus()) {
+                handle404(s, uri);
+                return;
+            }
+
         } catch (Exception e) {
             LogFactory.get().error(e);
             handle500(s, e);

@@ -65,6 +65,7 @@ public class Connector implements Runnable {
                     @Override
                     public void run() {
                         try {
+//                            LogFactory.get().error(Thread.currentThread().getName() + " " + Thread.currentThread().getContextClassLoader());
                             Request request = new Request(s, service);
                             Response response = new Response();
                             HttpProcessor processor = new HttpProcessor();
