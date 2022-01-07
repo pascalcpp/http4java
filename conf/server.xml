@@ -7,8 +7,7 @@
         <Engine defaultHost = "localhost">
             <Host name = "localhost">
                 <Context path = "/b" docBase = "D:/project-2022/java/http4java/b"/>
-                <Context path = "/javaweb" docBase = "D:/project-2022/java/javaweb/web"/>
-
+                <Context path = "/javaweb" docBase = "D:/project-2022/java/javaweb/web" reloadable = "true"/>
             </Host>
         </Engine>
     </Service>

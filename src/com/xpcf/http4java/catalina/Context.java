@@ -5,21 +5,24 @@ import cn.hutool.core.date.TimeInterval;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.log.LogFactory;
+import com.xpcf.http4java.watcher.ContextFileChangeWatcher;
 import com.xpcf.http4java.classloader.WebappClassLoader;
 import com.xpcf.http4java.exception.WebConfigDuplicatedException;
-import com.xpcf.http4java.util.Constant;
+import com.xpcf.http4java.http.ApplicationContext;
 import com.xpcf.http4java.util.ContextXMLUtil;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServlet;
 import java.io.File;
 import java.util.*;
 
 /**
- *
  * web application 上下文
+ *
  * @author XPCF
  * @version 1.0
  * @date 1/1/2022 10:07 PM
@@ -34,6 +37,12 @@ public class Context {
 
     private WebappClassLoader webappClassLoader;
 
+    private Host host;
+
+    private boolean reloadable;
+
+    private ContextFileChangeWatcher contextFileChangeWatcher;
+
     private Map<String, String> urlToServletClassName;
 
     private Map<String, String> urlToServletName;
@@ -42,13 +51,24 @@ public class Context {
 
     private Map<String, String> classNameToServletName;
 
+    private ServletContext servletContext;
 
-    public Context(String path, String docBase) {
+    private Map<Class<?>, HttpServlet> servletPool;
+
+    public Context(String path, String docBase, Host host, boolean reloadable) {
+        TimeInterval timeInterval = DateUtil.timer();
+
         this.path = path;
         this.docBase = docBase;
         this.contextWebXmlFile = new File(docBase, ContextXMLUtil.getWatchedResource());
+        this.host = host;
+        this.reloadable = reloadable;
+        this.servletContext = new ApplicationContext(this);
+        this.servletPool = new HashMap<>();
 
         ClassLoader commonClassLoader = Thread.currentThread().getContextClassLoader();
+
+        // reload 时重新生成classloader
         webappClassLoader = new WebappClassLoader(docBase, commonClassLoader);
 
         this.urlToServletName = new HashMap<>();
@@ -56,12 +76,27 @@ public class Context {
         this.servletNameToClassName = new HashMap<>();
         this.classNameToServletName = new HashMap<>();
 
+        LogFactory.get().info("Deploying web application directory {}", this.docBase);
         deploy();
+        LogFactory.get().info("Deployment of web application directory {} has finished in {} ms", this.docBase, timeInterval.intervalMs());
+
     }
+
     public WebappClassLoader getWebappClassLoader() {
         return webappClassLoader;
     }
 
+    public boolean isReloadable() {
+        return reloadable;
+    }
+
+    public ServletContext getServletContext() {
+        return servletContext;
+    }
+
+    public void setReloadable(boolean reloadable) {
+        this.reloadable = reloadable;
+    }
 
     public String getServletClassName(String uri) {
         return urlToServletClassName.get(uri);
@@ -155,10 +190,36 @@ public class Context {
         parseServletMapping(d);
     }
 
+    /**
+     * 考虑double check lock
+     * @param clazz
+     * @return
+     */
+    public synchronized HttpServlet getServlet(Class<?> clazz) throws IllegalAccessException, InstantiationException {
+        HttpServlet servlet = servletPool.get(clazz);
+        if (null == servlet) {
+            servlet = (HttpServlet) clazz.newInstance();
+            servletPool.put(clazz, servlet);
+        }
+        return servlet;
+    }
+
     private void deploy() {
-        TimeInterval timeInterval = DateUtil.timer();
-        LogFactory.get().info("Deploying web application directory {}", this.docBase);
+
         init();
-        LogFactory.get().info("Deployment of web application directory {} has finished in {} ms", this.docBase, timeInterval.intervalMs());
+
+        if (reloadable) {
+            contextFileChangeWatcher = new ContextFileChangeWatcher(this);
+            contextFileChangeWatcher.start();
+        }
+    }
+
+    public void stop() {
+        webappClassLoader.stop();
+        contextFileChangeWatcher.stop();
+    }
+
+    public void reload() {
+        host.reload(this);
     }
 }

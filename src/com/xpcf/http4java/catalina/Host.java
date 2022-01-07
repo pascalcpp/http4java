@@ -1,5 +1,6 @@
 package com.xpcf.http4java.catalina;
 
+import cn.hutool.log.LogFactory;
 import com.xpcf.http4java.util.Constant;
 import com.xpcf.http4java.util.ServerXMLUtil;
 
@@ -47,7 +48,7 @@ public class Host {
     }
 
     private void scanContextsInServerXML() {
-        List<Context> contexts = ServerXMLUtil.getContexts();
+        List<Context> contexts = ServerXMLUtil.getContexts(this);
         for (Context context : contexts) {
             contextMap.put(context.getPath(), context);
         }
@@ -63,7 +64,7 @@ public class Host {
         }
 
         String docBase = folder.getAbsolutePath();
-        Context context = new Context(path, docBase);
+        Context context = new Context(path, docBase, this, true);
         contextMap.put(context.getPath(), context);
 
     }
@@ -74,5 +75,21 @@ public class Host {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public void reload(Context context) {
+        LogFactory.get().info("Reloading Context with name [{}] has start", context.getPath());
+        String path = context.getPath();
+        String docBase = context.getDocBase();
+        boolean reloadable = context.isReloadable();
+
+        context.stop();
+
+        contextMap.remove(context);
+
+        Context newContext = new Context(path, docBase, this, reloadable);
+        contextMap.put(newContext.getPath(), newContext);
+        LogFactory.get().info("Reloading Context with name [{}] has completed", context.getPath());
+
     }
 }

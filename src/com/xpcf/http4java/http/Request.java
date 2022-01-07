@@ -96,6 +96,17 @@ public class Request extends BaseRequest {
         method = StrUtil.subBefore(requestString, " ", false);
     }
 
+
+    @Override
+    public String getRealPath(String path) {
+        return context.getServletContext().getRealPath(path);
+    }
+
+    @Override
+    public ServletContext getServletContext() {
+        return context.getServletContext();
+    }
+
     private void parseHttpRequest() throws IOException {
         InputStream inputStream = this.socket.getInputStream();
         byte[] bytes = MiniBrowser.readBytes(inputStream, false);
