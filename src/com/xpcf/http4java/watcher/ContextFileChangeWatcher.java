@@ -1,19 +1,27 @@
 package com.xpcf.http4java.watcher;
 
-import cn.hutool.core.io.watch.WatchMonitor;
 import cn.hutool.core.io.watch.WatchUtil;
 import cn.hutool.core.io.watch.Watcher;
+import cn.hutool.core.io.watch.watchers.DelayWatcher;
+import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.log.LogFactory;
 import com.xpcf.http4java.catalina.Context;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.WatchEvent;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * @author XPCF
  * @version 1.0
  * @date 1/7/2022 7:24 PM
  */
+
+
 public class ContextFileChangeWatcher {
 
     private WatchMonitor monitor;
@@ -22,58 +30,50 @@ public class ContextFileChangeWatcher {
 
     public ContextFileChangeWatcher(Context context) {
 
-        this.monitor = WatchUtil.createAll(context.getDocBase(), Integer.MAX_VALUE, new Watcher() {
-            private void dealWith(WatchEvent<?> event, Path currentPath) {
-                // 可能不需要加锁，监听只有一个线程
-                synchronized (ContextFileChangeWatcher.class) {
+        WatchMonitor watchMonitor = new WatchMonitor(Paths.get(context.getDocBase()), Integer.MAX_VALUE, WatchMonitor.EVENTS_ALL);
+        watchMonitor.setWatcher(new Watcher() {
+            private void dealWith(WatchEvent<?> event) {
 
+                String fileName = event.context().toString();
+//                System.err.println(fileName);
+                if (stop) {
+                    return;
+                }
 
-//                    String fileName = event.context().toString();
-                    String fileName = "";
-                    System.err.println(Thread.currentThread().getName() + " ");
-
-                    System.err.println(currentPath.toString());
-                    System.err.println("process method" + event.kind().name());
-                    if (stop) {
-//                        System.err.println(Thread.currentThread().getName() + " ");
-//                        System.err.println("stop method");
-                        return;
-                    }
-
-                    if (fileName.endsWith(".jar") || fileName.endsWith(".xml") || fileName.endsWith(".class")) {
-//                        System.err.println(Thread.currentThread().getName() + " ");
-//                        System.err.println("process method");
-                        stop = true;
-                        LogFactory.get().info(ContextFileChangeWatcher.this + " file changes under the Web application were detected {}", fileName);
-                        context.reload();
-                    }
+                if (fileName.endsWith(".jar") || fileName.endsWith(".class") || fileName.endsWith(".xml")) {
+                    stop = true;
+                    LogFactory.get().info(ContextFileChangeWatcher.this + " Important file changes under the Web application were detected {} ", fileName);
+                    context.reload();
                 }
             }
 
             @Override
             public void onCreate(WatchEvent<?> event, Path currentPath) {
-                dealWith(event, currentPath);
+                dealWith(event);
             }
 
             @Override
             public void onModify(WatchEvent<?> event, Path currentPath) {
-                dealWith(event, currentPath);
+                dealWith(event);
+
             }
 
             @Override
             public void onDelete(WatchEvent<?> event, Path currentPath) {
-                dealWith(event, currentPath);
+                dealWith(event);
+
             }
 
             @Override
             public void onOverflow(WatchEvent<?> event, Path currentPath) {
-                dealWith(event, currentPath);
+                dealWith(event);
             }
+
         });
 
+        this.monitor = watchMonitor;
         this.monitor.setDaemon(true);
     }
-
 
     public void start() {
         monitor.start();
@@ -83,4 +83,5 @@ public class ContextFileChangeWatcher {
         monitor.close();
     }
 }
+
 

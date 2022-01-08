@@ -48,8 +48,8 @@ public class Bootstrap {
 
         m.invoke(serverObject);
 
-        System.out.println("com.xpcf.http4java.catalina.Server classloader: " + serverClazz.getClassLoader());
-        System.out.println("bootstrap classloader: " + Bootstrap.class.getClassLoader());
+//        System.out.println("com.xpcf.http4java.catalina.Server classloader: " + serverClazz.getClassLoader());
+//        System.out.println("bootstrap classloader: " + Bootstrap.class.getClassLoader());
 //        LogFactory.get().error(Thread.currentThread().getName() + " " + Thread.currentThread().getContextClassLoader());
     }
 

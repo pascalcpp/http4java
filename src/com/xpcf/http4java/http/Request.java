@@ -17,10 +17,7 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 import java.security.Principal;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author XPCF
@@ -41,10 +38,15 @@ public class Request extends BaseRequest {
 
     private String method;
 
+    private String queryString;
+
+    private Map<String, String[]> parameterMap;
+
     public Request(Socket socket, Service service) throws IOException {
 
         this.socket = socket;
         this.service = service;
+        this.parameterMap = new HashMap<>();
 
         parseHttpRequest();
         if (StrUtil.isEmpty(requestString)) {
@@ -86,6 +88,40 @@ public class Request extends BaseRequest {
         }
     }
 
+    private void parseParameters() {
+
+        if ("GET".equals(getMethod())) {
+            String uri = StrUtil.subBetween(requestString, " ", " ");
+            if (StrUtil.contains(uri, '?')) {
+
+            }
+        }
+
+    }
+
+    @Override
+    public String getParameter(String name) {
+        String[] values = parameterMap.get(name);
+        if (null != values && values.length != 0) {
+            return values[0];
+        }
+        return null;
+    }
+
+    @Override
+    public Map<String, String[]> getParameterMap() {
+        return parameterMap;
+    }
+
+    @Override
+    public Enumeration<String> getParameterNames() {
+        return Collections.enumeration(parameterMap.keySet());
+    }
+
+    @Override
+    public String[] getParameterValues(String name) {
+        return parameterMap.get(name);
+    }
 
     @Override
     public String getMethod() {

@@ -44,8 +44,8 @@ public class InvokerServlet extends HttpServlet {
         try {
             Class<?> servletClazz = context.getWebappClassLoader().loadClass(servletClassName);
 
-            LogFactory.get().info("servletClass: " + servletClazz);
-            LogFactory.get().info("servletClass ClassLoader: " + servletClazz.getClassLoader());
+//            LogFactory.get().info("servletClass: " + servletClazz);
+//            LogFactory.get().info("servletClass ClassLoader: " + servletClazz.getClassLoader());
 
             Object servletObject = context.getServlet(servletClazz);
             ReflectUtil.invoke(servletObject, "service", request, response);
