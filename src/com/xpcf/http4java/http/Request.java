@@ -46,6 +46,7 @@ public class Request extends BaseRequest {
 
     private Map<String, String> headerMap;
 
+    private Cookie[] cookies;
 
     public Request(Socket socket, Service service) throws IOException {
 
@@ -158,6 +159,27 @@ public class Request extends BaseRequest {
         }
     }
 
+    @Override
+    public Cookie[] getCookies() {
+        return cookies;
+    }
+
+    private void parseCookies() {
+        List<Cookie> cookieList = new ArrayList<>();
+        String cookies = headerMap.get("cookie");
+
+        if (null != cookies) {
+            String[] pairs = StrUtil.split(cookies, ";");
+            for (String pair : pairs) {
+                if (StrUtil.isBlank(pair)) {
+                    continue;
+                }
+
+                String[] segs = StrUtil.split(pair, "=");
+
+            }
+        }
+    }
 
     @Override
     public String getHeader(String name) {
