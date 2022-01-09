@@ -113,7 +113,8 @@ public class HttpProcessor {
         // 构建request head
         String contentType = response.getContentType();
         String headText = Constant.responseHead202;
-        headText = StrUtil.format(headText, contentType);
+        String cookiesHeader = response.getCookiesHeader();
+        headText = StrUtil.format(headText, contentType, cookiesHeader);
 
 
         byte[] head = headText.getBytes();

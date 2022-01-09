@@ -13,6 +13,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -39,6 +41,41 @@ public class TestServer {
             Logger.println("start test");
         }
     }
+
+    @Test
+    public void testsetCookie() {
+        String html = getHttpString("/javaweb/setCookie");
+        containAssert(html,"Set-Cookie: name=Gareen(cookie); Expires=");
+    }
+
+
+    @Test
+    public void testheader() {
+        String html = getContentString("/javaweb/header");
+//        System.out.println(html);
+        Assert.assertEquals(html,"simple browser / java1.8");
+    }
+    @Test
+    public void testgetParam() {
+        String uri = "/javaweb/param";
+        String url = StrUtil.format("http://{}:{}{}", ip,port,uri);
+        Map<String,Object> params = new HashMap<>();
+        params.put("name","eko");
+        String html = MiniBrowser.getContentString(url, params, true);
+        Assert.assertEquals(html,"get name: eko");
+    }
+
+
+    @Test
+    public void testpostParam() {
+        String uri = "/javaweb/param";
+        String url = StrUtil.format("http://{}:{}{}", ip,port,uri);
+        Map<String,Object> params = new HashMap<>();
+        params.put("name","eko");
+        String html = MiniBrowser.getContentString(url, params, false);
+        Assert.assertEquals(html,"post name: eko");
+    }
+
 
     @Test
     public void testaTxt() {
