@@ -48,6 +48,23 @@ public class TestServer {
     }
 
 
+
+    @Test
+    public void testSession() throws IOException {
+        String jsessionid = getContentString("/javaweb/setSession");
+        if(null!=jsessionid)
+            jsessionid = jsessionid.trim();
+        String url = StrUtil.format("http://{}:{}{}", ip,port,"/javaweb/getSession");
+        URL u = new URL(url);
+        HttpURLConnection conn = (HttpURLConnection) u.openConnection();
+        conn.setRequestProperty("Cookie","JSESSIONID="+jsessionid);
+        conn.connect();
+        InputStream is = conn.getInputStream();
+        String html = IoUtil.read(is, "utf-8");
+        System.out.println(html);
+        containAssert(html,"Gareen(session)");
+    }
+
     @Test
     public void testgetCookie() throws IOException {
 

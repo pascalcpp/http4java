@@ -94,6 +94,7 @@ public class SessionManager {
         }
 
         for (String jsessionid : outdateJessionIds) {
+            System.out.println("delete jsessionid" + " " + jsessionid);
             sessionMap.remove(jsessionid);
         }
     }

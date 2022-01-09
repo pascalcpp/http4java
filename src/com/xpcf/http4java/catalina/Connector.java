@@ -67,6 +67,10 @@ public class Connector implements Runnable {
                         try {
 //                            LogFactory.get().error(Thread.currentThread().getName() + " " + Thread.currentThread().getContextClassLoader());
                             Request request = new Request(s, service);
+                            if ("".equals(request.getRequestString())) {
+                                return;
+                            }
+
                             Response response = new Response();
                             HttpProcessor processor = new HttpProcessor();
                             processor.execute(s, request, response);

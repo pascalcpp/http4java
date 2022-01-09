@@ -31,6 +31,7 @@ public class StandardSession implements HttpSession {
         this.attributesMap = new HashMap<>();
         this.id = jsessionid;
         this.creationTime = System.currentTimeMillis();
+        this.lastAccessedTime = System.currentTimeMillis();
         this.servletContext = servletContext;
     }
 
@@ -74,8 +75,8 @@ public class StandardSession implements HttpSession {
     }
 
     @Override
-    public Object getAttribute(String s) {
-        return null;
+    public Object getAttribute(String name) {
+        return attributesMap.get(name);
     }
 
     @Override
