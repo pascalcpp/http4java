@@ -11,10 +11,12 @@ import com.xpcf.http4java.http.Response;
 import com.xpcf.http4java.servlet.DefaultServlet;
 import com.xpcf.http4java.servlet.InvokerServlet;
 import com.xpcf.http4java.util.Constant;
+import com.xpcf.http4java.util.SessionManager;
 import com.xpcf.http4java.util.WebXMLUtil;
 import com.xpcf.http4java.webappservlet.HelloServlet;
 import jdk.net.Sockets;
 
+import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -31,6 +33,8 @@ public class HttpProcessor {
 
         try {
 
+            prepareSession(request, response);
+
             String uri = request.getUri();
             // 根据uri 处理
             if (null == uri) {
@@ -39,7 +43,7 @@ public class HttpProcessor {
 
             Context context = request.getContext();
             String servletClassName = context.getServletClassName(uri);
-            LogFactory.get().info("uri: " + uri);
+//            LogFactory.get().info("uri: " + uri);
 
             if (null != servletClassName) {
                 InvokerServlet.getInstance().service(request, response);
@@ -71,6 +75,13 @@ public class HttpProcessor {
         }
     }
 
+
+
+    public void prepareSession(Request request, Response response) {
+        String jsessionId = request.getJSessionIdFromCookie();
+        HttpSession session = SessionManager.getSession(jsessionId, request, response);
+        request.setSession(session);
+    }
 
     private static void handle500(Socket s, Exception e) {
         try {

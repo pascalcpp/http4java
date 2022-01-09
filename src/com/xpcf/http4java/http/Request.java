@@ -48,6 +48,10 @@ public class Request extends BaseRequest {
 
     private Cookie[] cookies;
 
+    private HttpSession session;
+
+
+
     public Request(Socket socket, Service service) throws IOException {
 
         this.socket = socket;
@@ -71,11 +75,7 @@ public class Request extends BaseRequest {
 
         parseParameters();
         parseHeaders();
-
-        getRemoteAddr();
-//        System.out.println(headerMap);
-
-//        System.out.println(getHeader("user-agent"));
+        parseCookies();
     }
 
 
@@ -160,6 +160,29 @@ public class Request extends BaseRequest {
     }
 
     @Override
+    public HttpSession getSession() {
+        return session;
+    }
+
+    public void setSession(HttpSession session) {
+        this.session = session;
+    }
+
+    public String getJSessionIdFromCookie() {
+        if (null == cookies) {
+            return null;
+        }
+
+        for (Cookie cookie : cookies) {
+            if ("JSESSIONID".equals(cookie.getName())) {
+                return cookie.getValue();
+            }
+        }
+
+        return null;
+    }
+
+    @Override
     public Cookie[] getCookies() {
         return cookies;
     }
@@ -176,9 +199,14 @@ public class Request extends BaseRequest {
                 }
 
                 String[] segs = StrUtil.split(pair, "=");
-
+                String name = segs[0].trim();
+                String value = segs[1].trim();
+                Cookie cookie = new Cookie(name, value);
+                cookieList.add(cookie);
             }
         }
+
+        this.cookies = ArrayUtil.toArray(cookieList, Cookie.class);
     }
 
     @Override

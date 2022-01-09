@@ -37,6 +37,8 @@ public class InvokerServlet extends HttpServlet {
         Request request = (Request) req;
         Response response = (Response) resp;
 
+        System.err.println(((Request) req).getRequestString());
+
         String uri = request.getUri();
         Context context = request.getContext();
         String servletClassName = context.getServletClassName(uri);
