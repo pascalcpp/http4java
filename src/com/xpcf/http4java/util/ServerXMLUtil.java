@@ -42,9 +42,18 @@ public class ServerXMLUtil {
         Elements es = d.select("Connector");
         for (Element e : es) {
             int port = Convert.toInt(e.attr("port"));
-            Connector c = new Connector(service);
-            c.setPort(port);
-            result.add(c);
+            String compression = e.attr("compression");
+            int compressionMinSize = Convert.toInt(e.attr("compressionMinSize"), 0);
+            String noCompressionUserAgents = e.attr("noCompressionUserAgents");
+            String compressableMimeType = e.attr("compressableMimeType");
+            Connector connector = new Connector(service);
+            connector.setPort(port);
+            connector.setCompression(compression);
+            connector.setCompressionMinSize(compressionMinSize);
+            connector.setNoCompressionUserAgents(noCompressionUserAgents);
+            connector.setCompressableMimeType(compressableMimeType);
+
+            result.add(connector);
         }
         return result;
     }

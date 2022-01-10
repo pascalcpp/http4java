@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Server>
     <Service name = "catalina">
-        <Connector port = "18080"/>
+        <Connector port = "18080"
+         compression = "on"
+         compressionMinSize = "20"
+         noCompressionUserAgents = "gozilla, traviata"
+         compressableMimeType = "text/html,text/xml,text/javascript,application/javascript,text/css.text/plain,text/json"
+        />
         <Connector port = "18081"/>
         <Connector port = "18082"/>
         <Engine defaultHost = "localhost">

@@ -6,7 +6,9 @@ import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.NetUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.ZipUtil;
 import cn.hutool.http.HttpUtil;
+import cn.hutool.http.cookie.ThreadLocalCookieStore;
 import com.xpcf.http4java.log.Logger;
 import com.xpcf.http4java.util.MiniBrowser;
 import org.junit.Assert;
@@ -16,9 +18,9 @@ import org.junit.Test;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.*;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -30,7 +32,7 @@ import java.util.concurrent.TimeUnit;
  * @date 12/27/2021 9:37 AM
  */
 public class TestServer {
-    private static int port = 18081;
+    private static int port = 18080;
     private static String ip = "127.0.0.1";
 
 
@@ -44,21 +46,34 @@ public class TestServer {
             System.exit(1);
         } else {
             Logger.println("start test");
+//            System.out.println(CookieHandler.getDefault());
         }
     }
 
 
+    @Test
+    public void testGzip() {
+        byte[] gzipContent = getContentBytes("/",true);
+        byte[] unGzipContent = ZipUtil.unGzip(gzipContent);
+        String html = new String(unGzipContent);
+        Assert.assertEquals(html, "root index.html@@zxzcxzczxczxcsxcaasdasdasdasdasdasdasd<><>/Mm.['h.'.'b");
+    }
+
 
     @Test
     public void testSession() throws IOException {
+        System.out.println(Thread.currentThread().getName());
         String jsessionid = getContentString("/javaweb/setSession");
         if(null!=jsessionid)
             jsessionid = jsessionid.trim();
+        System.out.println(jsessionid);
         String url = StrUtil.format("http://{}:{}{}", ip,port,"/javaweb/getSession");
         URL u = new URL(url);
         HttpURLConnection conn = (HttpURLConnection) u.openConnection();
         conn.setRequestProperty("Cookie","JSESSIONID="+jsessionid);
         conn.connect();
+
+
         InputStream is = conn.getInputStream();
         String html = IoUtil.read(is, "utf-8");
         System.out.println(html);
@@ -68,7 +83,7 @@ public class TestServer {
     @Test
     public void testgetCookie() throws IOException {
 
-
+        System.out.println(Thread.currentThread().getName());
         String url = StrUtil.format("http://{}:{}{}", ip,port,"/javaweb/getCookie");
         URL u = new URL(url);
         HttpURLConnection conn = (HttpURLConnection) u.openConnection();
@@ -76,6 +91,7 @@ public class TestServer {
         conn.connect();
         InputStream is = conn.getInputStream();
         String html = IoUtil.read(is, "utf-8");
+        conn.disconnect();
         containAssert(html,"name: Gareen(cookie)");
     }
 
@@ -83,6 +99,14 @@ public class TestServer {
     public void testsetCookie() {
         String html = getHttpString("/javaweb/setCookie");
         containAssert(html,"Set-Cookie: name=Gareen(cookie); Expires=");
+    }
+
+    private byte[] getContentBytes(String uri) {
+        return getContentBytes(uri,false);
+    }
+    private byte[] getContentBytes(String uri,boolean gzip) {
+        String url = StrUtil.format("http://{}:{}{}", ip,port,uri);
+        return MiniBrowser.getContentBytes(url,gzip);
     }
 
 
@@ -119,14 +143,29 @@ public class TestServer {
         String response  = getHttpString("/a.txt");
         containAssert(response, "Content-Type: text/plain");
     }
+//    @Test
+//    public void testPDF() {
+//        String uri = "/etf.pdf";
+//        String url = StrUtil.format("http://{}:{}{}", ip,port,uri);
+//        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//
+////        /** Cookie管理 */
+////        protected static CookieManager cookieManager;
+////        static {
+////            cookieManager = new CookieManager(new ThreadLocalCookieStore(), CookiePolicy.ACCEPT_ALL);
+////            CookieHandler.setDefault(cookieManager);
+////        }
+//        HttpUtil.download(url, baos, true);
+//        int pdfFileLength = 3590775;
+//        Assert.assertEquals(pdfFileLength, baos.toByteArray().length);
+//        CookieHandler.setDefault(null);
+//    }
+
     @Test
     public void testPDF() {
-        String uri = "/etf.pdf";
-        String url = StrUtil.format("http://{}:{}{}", ip,port,uri);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        HttpUtil.download(url, baos, true);
+        byte[] bytes = getContentBytes("/etf.pdf");
         int pdfFileLength = 3590775;
-        Assert.assertEquals(pdfFileLength, baos.toByteArray().length);
+        Assert.assertEquals(pdfFileLength, bytes.length);
     }
 
 

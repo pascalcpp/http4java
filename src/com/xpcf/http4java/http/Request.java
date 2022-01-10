@@ -7,10 +7,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.URLUtil;
 import cn.hutool.log.LogFactory;
 import com.xpcf.http4java.Bootstrap;
-import com.xpcf.http4java.catalina.Context;
-import com.xpcf.http4java.catalina.Engine;
-import com.xpcf.http4java.catalina.Host;
-import com.xpcf.http4java.catalina.Service;
+import com.xpcf.http4java.catalina.*;
 import com.xpcf.http4java.util.MiniBrowser;
 
 import javax.servlet.*;
@@ -36,7 +33,7 @@ public class Request extends BaseRequest {
 
     private Context context;
 
-    private Service service;
+    private Connector connector;
 
     private String method;
 
@@ -52,15 +49,16 @@ public class Request extends BaseRequest {
 
 
 
-    public Request(Socket socket, Service service) throws IOException {
+    public Request(Socket socket, Connector connector) throws IOException {
 
         this.socket = socket;
-        this.service = service;
+        this.connector = connector;
         this.parameterMap = new HashMap<>();
         this.headerMap = new HashMap<>();
 
         parseHttpRequest();
         if (StrUtil.isEmpty(requestString)) {
+//            LogFactory.get().info("requestString: " +(requestString == null ? "null" : "empty") );
             return;
         }
         parseUri();
@@ -83,6 +81,7 @@ public class Request extends BaseRequest {
      * 根据uri 解析context
      */
     private void parseContext() {
+        Service service = connector.getService();
         Engine engine = service.getEngine();
         context = engine.getDefaultHost().getContext(uri);
 
@@ -207,6 +206,10 @@ public class Request extends BaseRequest {
         }
 
         this.cookies = ArrayUtil.toArray(cookieList, Cookie.class);
+    }
+
+    public Connector getConnector() {
+        return connector;
     }
 
     @Override
@@ -363,6 +366,8 @@ public class Request extends BaseRequest {
         InputStream inputStream = this.socket.getInputStream();
         byte[] bytes = MiniBrowser.readBytes(inputStream, false);
         requestString = new String(bytes, "utf-8");
+        LogFactory.get().info(requestString);
+
 //        LogFactory.get().info(requestString);
     }
 

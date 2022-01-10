@@ -19,8 +19,13 @@ public class Constant {
 
     public static final int CODE500 = 500;
 
-    public static final String responseHead202 = "HTTP/1.1 200 OK\r\n"
+    public static final String responseHead200 = "HTTP/1.1 200 OK\r\n"
             + "Content-Type: {}{}\r\n\r\n";
+
+    public static final String responseHead200Gzip =
+            "HTTP/1.1 200 OK\r\nContent-Type: {}{}\r\n" +
+                    "Content-Encoding: gzip" +
+                    "\r\n\r\n";
 
 
     public static final String responseHead404 = "HTTP/1.1 404 Not Found\r\n" +

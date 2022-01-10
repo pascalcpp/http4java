@@ -5,6 +5,7 @@ import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.ZipUtil;
 import cn.hutool.log.LogFactory;
 import com.xpcf.http4java.http.Request;
 import com.xpcf.http4java.http.Response;
@@ -52,7 +53,7 @@ public class HttpProcessor {
             }
 
             if (Constant.CODE200 == response.getStatus()) {
-                handle200(s, response);
+                handle200(s, request, response);
                 return;
             }
 
@@ -79,8 +80,54 @@ public class HttpProcessor {
 
     public void prepareSession(Request request, Response response) {
         String jsessionId = request.getJSessionIdFromCookie();
+//        System.out.println(jsessionId + "size: " + SessionManager.getSessionMap().size());
+//        if (null != jsessionId) {
+//            LogFactory.get().info(String.valueOf(request.getRemotePort()));
+//            LogFactory.get().info(request.getRequestString());
+//        }
+
         HttpSession session = SessionManager.getSession(jsessionId, request, response);
         request.setSession(session);
+    }
+
+    private static boolean isGzip(Request request, byte[] body, String mimeType) {
+        String acceptEncoding = request.getHeader("Accept-Encoding");
+        if (!StrUtil.containsAny(acceptEncoding, "gzip")) {
+            return false;
+        }
+
+        Connector connector = request.getConnector();
+        if (mimeType.contains(",")) {
+            mimeType = StrUtil.subBefore(mimeType, ";", false);
+        }
+
+        if (!"on".equals(connector.getCompression())) {
+            return false;
+        }
+
+        if (body.length < connector.getCompressionMinSize()) {
+            return false;
+        }
+
+        String userAgents = connector.getNoCompressionUserAgents();
+        String[] eachUserAgents = userAgents.split(",");
+        for (String eachUserAgent : eachUserAgents) {
+            eachUserAgent = eachUserAgent.trim();
+            String userAgent = request.getHeader("User-Agent");
+            if (StrUtil.containsAny(userAgent, eachUserAgent)) {
+                return false;
+            }
+        }
+
+        String mimeTypes = connector.getCompressableMimeType();
+        String[] eachMimeTypes = mimeTypes.split(",");
+        for (String eachMimeType : eachMimeTypes) {
+            if (mimeType.equals(eachMimeType)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static void handle500(Socket s, Exception e) {
@@ -119,17 +166,32 @@ public class HttpProcessor {
         os.write(responseBytes);
     }
 
-    private static void handle200(Socket s, Response response) throws IOException {
+    private static void handle200(Socket s, Request request, Response response) throws IOException {
 
         // 构建request head
         String contentType = response.getContentType();
-        String headText = Constant.responseHead202;
         String cookiesHeader = response.getCookiesHeader();
+
+        byte[] body = response.getBody();
+        boolean gzip = isGzip(request, body, contentType);
+
+        String headText;
+        if (gzip) {
+            headText = Constant.responseHead200Gzip;
+        } else {
+            headText = Constant.responseHead200;
+        }
+
         headText = StrUtil.format(headText, contentType, cookiesHeader);
+        if (gzip) {
+
+            body = ZipUtil.gzip(body);
+
+        }
 
 
         byte[] head = headText.getBytes();
-        byte[] body = response.getBody();
+
 
         // 将head与body合并
         byte[] responseBytes = new byte[head.length + body.length];

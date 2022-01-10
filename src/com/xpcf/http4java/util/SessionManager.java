@@ -4,6 +4,7 @@ import cn.hutool.core.convert.Convert;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.crypto.SecureUtil;
+import cn.hutool.log.LogFactory;
 import com.xpcf.http4java.http.Request;
 import com.xpcf.http4java.http.Response;
 import com.xpcf.http4java.http.StandardSession;
@@ -16,6 +17,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author XPCF
@@ -24,7 +26,12 @@ import java.util.*;
  */
 public class SessionManager {
 
-    private static Map<String, StandardSession> sessionMap = new HashMap<>();
+    // 整个server使用一个sessionMap 应该考虑线程安全
+    private static Map<String, StandardSession> sessionMap = new ConcurrentHashMap<>();
+
+    public static Map<String, StandardSession> getSessionMap() {
+        return sessionMap;
+    }
 
     private static int defaultTimeout = getTimeout();
 
@@ -34,12 +41,15 @@ public class SessionManager {
 
     public static HttpSession getSession(String jsessionid, Request request, Response response) {
         if (null == jsessionid) {
+//            System.out.println("null jsessionid");
             return newSession(request, response);
         } else {
             StandardSession currentSession = sessionMap.get(jsessionid);
             if (null == currentSession) {
+//                System.out.println("null currentSession");
                 return newSession(request, response);
             } else {
+                LogFactory.get().info("have currentSession");
                 currentSession.setLastAccessedTime(System.currentTimeMillis());
                 createCookieBySession(currentSession, request, response);
                 return currentSession;
