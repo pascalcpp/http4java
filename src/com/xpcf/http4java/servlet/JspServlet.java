@@ -2,9 +2,11 @@ package com.xpcf.http4java.servlet;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.StrUtil;
+import com.xpcf.http4java.catalina.Context;
 import com.xpcf.http4java.http.Request;
 import com.xpcf.http4java.http.Response;
 import com.xpcf.http4java.util.Constant;
+import com.xpcf.http4java.util.JspUtil;
 import com.xpcf.http4java.util.WebXMLUtil;
 
 import javax.servlet.ServletException;
@@ -43,14 +45,31 @@ public class JspServlet extends HttpServlet {
         }
 
         String fileName = StrUtil.removePrefix(uri, "/");
-        File file = FileUtil.file(request.getRealPath(uri));
+        File jspFile = FileUtil.file(request.getRealPath(uri));
 
-        if (file.exists()) {
-            String extName = FileUtil.extName(file);
+        if (jspFile.exists()) {
+            Context context = request.getContext();
+            String path = context.getPath();
+            String subFolder;
+            if ("/".equals(path)) {
+                subFolder = "_";
+            } else {
+                subFolder = StrUtil.subAfter(path, "/", false);
+            }
+
+            String servletClassPath = JspUtil.getServletClassPath(uri, subFolder);
+            File jspServletClassFile = new File(servletClassPath);
+            if (!jspServletClassFile.exists()) {
+                JspUtil.compileJsp(context, jspFile);
+            } else if (jspFile.lastModified() > jspServletClassFile.lastModified()) {
+                JspUtil.compileJsp(context, jspFile);
+            }
+
+            String extName = FileUtil.extName(jspFile);
             String mimeType = WebXMLUtil.getMimeType(extName);
             response.setContentType(mimeType);
 
-            byte[] body = FileUtil.readBytes(file);
+            byte[] body = FileUtil.readBytes(jspFile);
             response.setBody(body);
             response.setStatus(Constant.CODE200);
 

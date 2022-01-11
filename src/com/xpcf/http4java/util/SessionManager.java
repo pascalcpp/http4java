@@ -41,15 +41,12 @@ public class SessionManager {
 
     public static HttpSession getSession(String jsessionid, Request request, Response response) {
         if (null == jsessionid) {
-//            System.out.println("null jsessionid");
             return newSession(request, response);
         } else {
             StandardSession currentSession = sessionMap.get(jsessionid);
             if (null == currentSession) {
-//                System.out.println("null currentSession");
                 return newSession(request, response);
             } else {
-                LogFactory.get().info("have currentSession");
                 currentSession.setLastAccessedTime(System.currentTimeMillis());
                 createCookieBySession(currentSession, request, response);
                 return currentSession;

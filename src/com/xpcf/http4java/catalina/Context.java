@@ -11,6 +11,8 @@ import com.xpcf.http4java.classloader.WebappClassLoader;
 import com.xpcf.http4java.exception.WebConfigDuplicatedException;
 import com.xpcf.http4java.http.ApplicationContext;
 import com.xpcf.http4java.util.ContextXMLUtil;
+import org.apache.jasper.JspC;
+import org.apache.jasper.compiler.JspRuntimeContext;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -283,6 +285,9 @@ public class Context {
             contextFileChangeWatcher = new ContextFileChangeWatcher(this);
             contextFileChangeWatcher.start();
         }
+
+        JspC jspC = new JspC();
+        new JspRuntimeContext(servletContext, jspC);
     }
 
     public void stop() {
