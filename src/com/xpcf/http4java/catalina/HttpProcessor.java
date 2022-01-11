@@ -11,6 +11,7 @@ import com.xpcf.http4java.http.Request;
 import com.xpcf.http4java.http.Response;
 import com.xpcf.http4java.servlet.DefaultServlet;
 import com.xpcf.http4java.servlet.InvokerServlet;
+import com.xpcf.http4java.servlet.JspServlet;
 import com.xpcf.http4java.util.Constant;
 import com.xpcf.http4java.util.SessionManager;
 import com.xpcf.http4java.util.WebXMLUtil;
@@ -48,6 +49,8 @@ public class HttpProcessor {
 
             if (null != servletClassName) {
                 InvokerServlet.getInstance().service(request, response);
+            } else if (uri.endsWith(".jsp")) {
+                JspServlet.getInstance().service(request, response);
             } else {
                 DefaultServlet.getInstance().service(request, response);
             }

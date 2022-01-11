@@ -151,7 +151,6 @@ public class Request extends BaseRequest {
                 break;
             }
             String[] segs = line.split(": ");
-//            System.out.println(line);
             String headerName = segs[0].toLowerCase();
             String headerValue = segs[1];
             headerMap.put(headerName, headerValue);
@@ -366,9 +365,6 @@ public class Request extends BaseRequest {
         InputStream inputStream = this.socket.getInputStream();
         byte[] bytes = MiniBrowser.readBytes(inputStream, false);
         requestString = new String(bytes, "utf-8");
-        LogFactory.get().info(requestString);
-
-//        LogFactory.get().info(requestString);
     }
 
     private void parseUri() {

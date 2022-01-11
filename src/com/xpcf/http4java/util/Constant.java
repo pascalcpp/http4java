@@ -19,6 +19,8 @@ public class Constant {
 
     public static final int CODE500 = 500;
 
+    public static final String workFolder = SystemUtil.get("user.dir") + File.separator + "work";
+
     public static final String responseHead200 = "HTTP/1.1 200 OK\r\n"
             + "Content-Type: {}{}\r\n\r\n";
 

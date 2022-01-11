@@ -170,6 +170,13 @@ public class TestServer {
 
 
     @Test
+    public void testJsp() {
+        String html = getContentString("/javaweb/");
+        Assert.assertEquals("hello jsp@javaweb", html);
+    }
+
+
+    @Test
     public void testaIndex() {
         String html = getContentString("/a");
         Assert.assertEquals(html,"a.index");
