@@ -33,12 +33,22 @@ public class Response extends BaseResponse {
 
     private List<Cookie> cookies;
 
+    private String redirectPath;
 
     public Response() {
         this.stringWriter = new StringWriter();
         this.writer = new PrintWriter(stringWriter);
         this.contentType = "text/html";
         this.cookies = new ArrayList<>();
+    }
+
+    @Override
+    public void sendRedirect(String redirectPath) {
+        this.redirectPath = redirectPath;
+    }
+
+    public String getRedirectPath() {
+        return redirectPath;
     }
 
     @Override

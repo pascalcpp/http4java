@@ -3,6 +3,7 @@ package com.xpcf.http4java.servlet;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.StrUtil;
 import com.xpcf.http4java.catalina.Context;
+import com.xpcf.http4java.classloader.JspClassLoader;
 import com.xpcf.http4java.http.Request;
 import com.xpcf.http4java.http.Response;
 import com.xpcf.http4java.util.Constant;
@@ -47,36 +48,48 @@ public class JspServlet extends HttpServlet {
         String fileName = StrUtil.removePrefix(uri, "/");
         File jspFile = FileUtil.file(request.getRealPath(uri));
 
-        if (jspFile.exists()) {
-            Context context = request.getContext();
-            String path = context.getPath();
-            String subFolder;
-            if ("/".equals(path)) {
-                subFolder = "_";
+        try {
+            if (jspFile.exists()) {
+                Context context = request.getContext();
+                String path = context.getPath();
+                String subFolder;
+                if ("/".equals(path)) {
+                    subFolder = "_";
+                } else {
+                    subFolder = StrUtil.subAfter(path, "/", false);
+                }
+
+                String servletClassPath = JspUtil.getServletClassPath(uri, subFolder);
+                File jspServletClassFile = new File(servletClassPath);
+                if (!jspServletClassFile.exists()) {
+                    JspUtil.compileJsp(context, jspFile);
+                } else if (jspFile.lastModified() > jspServletClassFile.lastModified()) {
+                    JspUtil.compileJsp(context, jspFile);
+                    JspClassLoader.invalidJspClassloader(uri, context);
+                }
+
+                String extName = FileUtil.extName(jspFile);
+                String mimeType = WebXMLUtil.getMimeType(extName);
+                response.setContentType(mimeType);
+
+                JspClassLoader jspClassloader = JspClassLoader.getJspClassloader(uri, context);
+                String jspServletClassName = JspUtil.getJspServletClassName(uri, subFolder);
+                Class<?> jspServletClass = jspClassloader.loadClass(jspServletClassName);
+
+                HttpServlet servlet = context.getServlet(jspServletClass);
+                servlet.service(request, response);
+                if (null != response.getRedirectPath()) {
+                    response.setStatus(Constant.CODE302);
+                } else {
+                    response.setStatus(Constant.CODE200);
+                }
+
             } else {
-                subFolder = StrUtil.subAfter(path, "/", false);
+                response.setStatus(Constant.CODE404);
             }
-
-            String servletClassPath = JspUtil.getServletClassPath(uri, subFolder);
-            File jspServletClassFile = new File(servletClassPath);
-            if (!jspServletClassFile.exists()) {
-                JspUtil.compileJsp(context, jspFile);
-            } else if (jspFile.lastModified() > jspServletClassFile.lastModified()) {
-                JspUtil.compileJsp(context, jspFile);
-            }
-
-            String extName = FileUtil.extName(jspFile);
-            String mimeType = WebXMLUtil.getMimeType(extName);
-            response.setContentType(mimeType);
-
-            byte[] body = FileUtil.readBytes(jspFile);
-            response.setBody(body);
-            response.setStatus(Constant.CODE200);
-
-        } else {
-            response.setStatus(Constant.CODE404);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-
 
 
     }

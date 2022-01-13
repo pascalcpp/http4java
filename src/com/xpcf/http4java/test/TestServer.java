@@ -50,6 +50,14 @@ public class TestServer {
         }
     }
 
+    @Test
+    public void testServerJumpWithAttributes(){
+        String http_servlet = getHttpString("/javaweb/jump2");
+        System.out.println(http_servlet);
+        containAssert(http_servlet,"hello the name is gareen");
+    }
+
+
 
     @Test
     public void testGzip() {
@@ -128,6 +136,21 @@ public class TestServer {
 
 
     @Test
+    public void testClientJump(){
+        String http_servlet = getHttpString("/javaweb/jump1");
+        containAssert(http_servlet,"HTTP/1.1 302 Found");
+        String http_jsp = getHttpString("/javaweb/jump1.jsp");
+        containAssert(http_jsp,"HTTP/1.1 302 Found");
+    }
+
+    @Test
+    public void testServerJump(){
+        String http_servlet = getHttpString("/javaweb/jump2");
+        containAssert(http_servlet,"hello the name is");
+    }
+
+
+    @Test
     public void testpostParam() {
         String uri = "/javaweb/param";
         String url = StrUtil.format("http://{}:{}{}", ip,port,uri);
@@ -171,8 +194,8 @@ public class TestServer {
 
     @Test
     public void testJsp() {
-        String html = getContentString("/javaweb/");
-        Assert.assertEquals("hello jsp@javaweb", html);
+        String html = getContentString("/javaweb/a.jsp");
+        Assert.assertEquals("hello", html);
     }
 
 

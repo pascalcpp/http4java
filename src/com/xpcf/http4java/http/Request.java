@@ -47,7 +47,11 @@ public class Request extends BaseRequest {
 
     private HttpSession session;
 
+    private boolean forwarded;
 
+    private boolean processSession;
+
+    private Map<String, Object> attributesMap;
 
     public Request(Socket socket, Connector connector) throws IOException {
 
@@ -55,15 +59,18 @@ public class Request extends BaseRequest {
         this.connector = connector;
         this.parameterMap = new HashMap<>();
         this.headerMap = new HashMap<>();
+        this.attributesMap = new HashMap<>();
 
         parseHttpRequest();
         if (StrUtil.isEmpty(requestString)) {
-//            LogFactory.get().info("requestString: " +(requestString == null ? "null" : "empty") );
             return;
         }
         parseUri();
         parseContext();
         parseMethod();
+
+        // 将uri前面的contextpath 移除
+        // 如 /javaweb/index.jsp  -> /index.jsp
         if (!"/".equals(context.getPath())) {
             uri = StrUtil.removePrefix(uri, context.getPath());
             if (StrUtil.isEmpty(uri)) {
@@ -157,6 +164,8 @@ public class Request extends BaseRequest {
         }
     }
 
+
+
     @Override
     public HttpSession getSession() {
         return session;
@@ -178,6 +187,34 @@ public class Request extends BaseRequest {
         }
 
         return null;
+    }
+
+    public boolean isProcessSession() {
+        return processSession;
+    }
+
+    public void setProcessSession(boolean processSession) {
+        this.processSession = processSession;
+    }
+
+    @Override
+    public void removeAttribute(String name) {
+        attributesMap.remove(name);
+    }
+
+    @Override
+    public void setAttribute(String name, Object value) {
+        attributesMap.put(name, value);
+    }
+
+    @Override
+    public Object getAttribute(String name) {
+        return attributesMap.get(name);
+    }
+
+    @Override
+    public Enumeration<String> getAttributeNames() {
+        return Collections.enumeration(attributesMap.keySet());
     }
 
     @Override
@@ -308,6 +345,23 @@ public class Request extends BaseRequest {
         return isa.getHostName();
     }
 
+    public boolean isForwarded() {
+        return forwarded;
+    }
+
+    public Socket getSocket() {
+        return socket;
+    }
+
+    @Override
+    public RequestDispatcher getRequestDispatcher(String uri) {
+        return new ApplicationRequestDispatcher(uri);
+    }
+
+    public void setForwarded(boolean forwarded) {
+        this.forwarded = forwarded;
+    }
+
     @Override
     public String getScheme() {
         return "http";
@@ -395,5 +449,8 @@ public class Request extends BaseRequest {
     }
 
 
+    public void setUri(String uri) {
+        this.uri = uri;
+    }
 }
 

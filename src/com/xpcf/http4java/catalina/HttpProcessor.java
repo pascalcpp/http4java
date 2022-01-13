@@ -18,11 +18,14 @@ import com.xpcf.http4java.util.WebXMLUtil;
 import com.xpcf.http4java.webappservlet.HelloServlet;
 import jdk.net.Sockets;
 
+import javax.servlet.Filter;
+import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.List;
 
 /**
  * @author XPCF
@@ -35,7 +38,9 @@ public class HttpProcessor {
 
         try {
 
-            prepareSession(request, response);
+            if (!request.isProcessSession()) {
+                prepareSession(request, response);
+            }
 
             String uri = request.getUri();
             // 根据uri 处理
@@ -45,18 +50,30 @@ public class HttpProcessor {
 
             Context context = request.getContext();
             String servletClassName = context.getServletClassName(uri);
-//            LogFactory.get().info("uri: " + uri);
+            HttpServlet workingServlet;
 
             if (null != servletClassName) {
-                InvokerServlet.getInstance().service(request, response);
+                workingServlet = InvokerServlet.getInstance();
             } else if (uri.endsWith(".jsp")) {
-                JspServlet.getInstance().service(request, response);
-            } else {
-                DefaultServlet.getInstance().service(request, response);
+                workingServlet = JspServlet.getInstance();
+            } else {;
+                workingServlet = DefaultServlet.getInstance();
+            }
+
+            List<Filter> filters = request.getContext().getMatchedFilters(request.getRequestURI());
+            ApplicationFilterChain filterChain = new ApplicationFilterChain(filters, workingServlet);
+            filterChain.doFilter(request, response);
+            if (request.isForwarded()) {
+                return;
             }
 
             if (Constant.CODE200 == response.getStatus()) {
                 handle200(s, request, response);
+                return;
+            }
+
+            if (Constant.CODE302 == response.getStatus()) {
+                handle302(s, response);
                 return;
             }
 
@@ -79,18 +96,21 @@ public class HttpProcessor {
         }
     }
 
+    private void handle302(Socket s, Response response) throws IOException {
+        OutputStream os = s.getOutputStream();
+        String redirectPath = response.getRedirectPath();
+        String headText = Constant.responseHead302;
+        String header = StrUtil.format(headText, redirectPath);
+        byte[] responseBytes = header.getBytes("UTF-8");
+        os.write(responseBytes);
+    }
 
 
     public void prepareSession(Request request, Response response) {
         String jsessionId = request.getJSessionIdFromCookie();
-//        System.out.println(jsessionId + "size: " + SessionManager.getSessionMap().size());
-//        if (null != jsessionId) {
-//            LogFactory.get().info(String.valueOf(request.getRemotePort()));
-//            LogFactory.get().info(request.getRequestString());
-//        }
-
         HttpSession session = SessionManager.getSession(jsessionId, request, response);
         request.setSession(session);
+        request.setProcessSession(true);
     }
 
     private static boolean isGzip(Request request, byte[] body, String mimeType) {

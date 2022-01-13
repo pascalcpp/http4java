@@ -41,15 +41,17 @@ public class InvokerServlet extends HttpServlet {
         Context context = request.getContext();
         String servletClassName = context.getServletClassName(uri);
 
+
         try {
             Class<?> servletClazz = context.getWebappClassLoader().loadClass(servletClassName);
-
-//            LogFactory.get().info("servletClass: " + servletClazz);
-//            LogFactory.get().info("servletClass ClassLoader: " + servletClazz.getClassLoader());
-
             Object servletObject = context.getServlet(servletClazz);
             ReflectUtil.invoke(servletObject, "service", request, response);
-            response.setStatus(Constant.CODE200);
+            if (null != response.getRedirectPath()) {
+                response.setStatus(Constant.CODE302);
+            } else {
+                response.setStatus(Constant.CODE200);
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }

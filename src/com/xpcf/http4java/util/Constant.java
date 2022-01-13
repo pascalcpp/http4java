@@ -34,6 +34,10 @@ public class Constant {
             "Content-Type: text/html\r\n\r\n";
 
 
+    public static final String responseHead302 =
+            "HTTP/1.1 302 Found\r\nLocation: {}\r\n\r\n";
+
+
     public static final String responseHead500 = "HTTP/1.1 500 Internal Server Error\r\n"
             + "Content-Type: text/html\r\n\r\n";
 
