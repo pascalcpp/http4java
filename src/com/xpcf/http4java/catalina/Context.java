@@ -72,6 +72,8 @@ public class Context {
 
     private Map<String, Filter> filterPool;
 
+    private List<ServletContextListener> listeners;
+
     private Map<String, Map<String, String>> servletClassNameInitParams;
 
     private List<String> loadOnStartupServletClassNames;
@@ -84,6 +86,7 @@ public class Context {
         this.contextWebXmlFile = new File(docBase, ContextXMLUtil.getWatchedResource());
         this.host = host;
         this.reloadable = reloadable;
+        this.listeners = new ArrayList<>();
         this.servletContext = new ApplicationContext(this);
         this.servletPool = new HashMap<>();
         this.filterPool = new HashMap<>();
@@ -114,7 +117,7 @@ public class Context {
     public List<Filter> getMatchedFilters(String uri) {
         List<Filter> filterList = new ArrayList<>();
         Set<String> patterns = urlToFilterClassNames.keySet();
-        Set<String> matchedPatterns = new HashSet<>();
+        Set<String> matchedPatterns = new LinkedHashSet<>();
 
         for (String pattern : patterns) {
             if (match(pattern, uri)) {
@@ -122,7 +125,7 @@ public class Context {
             }
         }
 
-        Set<String> matchedFilterClassNames = new HashSet<>();
+        Set<String> matchedFilterClassNames = new LinkedHashSet<>();
         for (String matchedPattern : matchedPatterns) {
             List<String> filterClassNames = urlToFilterClassNames.get(matchedPattern);
             matchedFilterClassNames.addAll(filterClassNames);
@@ -249,12 +252,49 @@ public class Context {
         this.path = path;
     }
 
+    public void addListener(ServletContextListener listener) {
+        listeners.add(listener);
+    }
+
     public String getDocBase() {
         return docBase;
     }
 
     public void setDocBase(String docBase) {
         this.docBase = docBase;
+    }
+
+    private void loadListeners() {
+        try {
+            if (!contextWebXmlFile.exists()) {
+                return;
+            }
+            String xml = FileUtil.readUtf8String(contextWebXmlFile);
+            Document d = Jsoup.parse(xml);
+            Elements es = d.select("listener listener-class");
+
+            for (Element e : es) {
+                String listenerClassName = e.text();
+                Class<?> clazz = this.getWebappClassLoader().loadClass(listenerClassName);
+                ServletContextListener listener = (ServletContextListener) clazz.newInstance();
+                addListener(listener);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void fireEvent(String type) {
+        ServletContextEvent event = new ServletContextEvent(servletContext);
+        for (ServletContextListener listener : listeners) {
+            if ("init".equals(type)) {
+                listener.contextInitialized(event);
+            }
+
+            if ("destroy".equals(type)) {
+                listener.contextDestroyed(event);
+            }
+        }
     }
 
     private void parseServletInitParams(Document d) {
@@ -357,6 +397,8 @@ public class Context {
 
         parseLoadOnStartup(d);
         handleLoadOnStartup();
+
+        fireEvent("init");
     }
 
     private void initFilter() {
@@ -438,6 +480,7 @@ public class Context {
     }
 
     private void deploy() {
+        loadListeners();
 
         init();
 
@@ -454,9 +497,18 @@ public class Context {
         webappClassLoader.stop();
         contextFileChangeWatcher.stop();
         destroyServlets();
+
+        fireEvent("destroy");
     }
 
     public void reload() {
+        // before reload wait OS change file
+
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         host.reload(this);
     }
 }

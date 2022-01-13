@@ -1,0 +1,1 @@
+hello the name is <%=request.getAttribute("name")%>

@@ -35,7 +35,6 @@ public class ContextFileChangeWatcher {
             private void dealWith(WatchEvent<?> event) {
 
                 String fileName = event.context().toString();
-//                System.err.println(fileName);
                 if (stop) {
                     return;
                 }

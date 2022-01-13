@@ -17,7 +17,7 @@ public class ApplicationFilterChain implements FilterChain {
 
     private Servlet servlet;
 
-    int pos;
+    int pos = 0;
 
     public ApplicationFilterChain(List<Filter> filterList, Servlet servlet) {
         this.filters = ArrayUtil.toArray(filterList, Filter.class);

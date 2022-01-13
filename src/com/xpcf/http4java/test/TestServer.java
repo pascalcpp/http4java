@@ -134,6 +134,19 @@ public class TestServer {
         Assert.assertEquals(html,"get name: eko");
     }
 
+    @Test
+    public void testJavaweb0Hello() {
+        String html = getContentString("/javaweb0/hello");
+//        System.out.println(html);
+        containAssert(html,"hello@javaweb");
+    }
+
+    @Test
+    public void testJavaweb1Hello() {
+        String html = getContentString("/javaweb1/hello");
+//        System.out.println(html);
+        containAssert(html,"hello@javaweb");
+    }
 
     @Test
     public void testClientJump(){

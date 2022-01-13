@@ -1,8 +1,12 @@
 package com.xpcf.http4java.catalina;
 
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.util.RuntimeUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.log.LogFactory;
 import com.xpcf.http4java.util.Constant;
 import com.xpcf.http4java.util.ServerXMLUtil;
+import com.xpcf.http4java.watcher.WarFileWatcher;
 
 import java.io.File;
 import java.util.HashMap;
@@ -30,12 +34,71 @@ public class Host {
 
         scanContextsOnWebAppsFolder();
         scanContextsInServerXML();
+        scanWarOnWebAppsFolder();
+
+        new WarFileWatcher(this).start();
     }
 
     public Context getContext(String path) {
         return contextMap.get(path);
     }
 
+    public void load(File folder) {
+        String path = folder.getName();
+        if ("ROOT".equals(path)) {
+            path = "/";
+        } else {
+            path = "/" + path;
+        }
+
+        String docBase = folder.getAbsolutePath();
+        Context context = new Context(path, docBase, this, false);
+        contextMap.put(context.getPath(), context);
+    }
+
+    public void loadWar(File warFile) {
+        String fileName = warFile.getName();
+        String folderName = StrUtil.subBefore(fileName, ".", true);
+
+        Context context = contextMap.get("/" + folderName);
+        if (null != context) {
+            return;
+        }
+
+        File folder = new File(Constant.webappsFolder, folderName);
+        if (folder.exists()) {
+            return;
+        }
+
+        // 移动war文件， jar命令只支持解压到当前目录
+        File tempWarFile = FileUtil.file(Constant.webappsFolder, folderName, fileName);
+        File contextFolder = tempWarFile.getParentFile();
+        contextFolder.mkdir();
+        FileUtil.copyFile(warFile, tempWarFile);
+
+        // 解压 注意要加空格
+        String command = "jar xvf " + fileName;
+        Process p = RuntimeUtil.exec(null, contextFolder, command);
+        try {
+            p.waitFor();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        tempWarFile.delete();
+        load(contextFolder);
+    }
+
+    private void scanWarOnWebAppsFolder() {
+        File folder = FileUtil.file(Constant.webappsFolder);
+        File[] files = folder.listFiles();
+        for (File file : files) {
+            if (!file.getName().toLowerCase().endsWith(".war")) {
+                continue;
+            }
+            loadWar(file);
+        }
+    }
 
     private void scanContextsOnWebAppsFolder() {
         File[] folders = Constant.webappsFolder.listFiles();
